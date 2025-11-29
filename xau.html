@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>XAU Pips Calculator — Mobile</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#06b6d4;--glass: rgba(255,255,255,0.03)}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#051023 0%, #071027 100%);padding:18px;color:#e6eef6}
+    .wrap{width:100%;max-width:540px}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    h1{font-size:1rem;margin:0}
+    .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}    
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .row{display:flex;gap:8px}
+    .input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:15px}
+    .input.small{padding:10px;border-radius:8px}
+    .controls{display:grid;gap:10px;margin-top:10px}
+    .btn{appearance:none;border:0;padding:10px 12px;border-radius:10px;font-weight:600;color:#042024;background:var(--accent);cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--accent);border:1px solid rgba(6,182,212,0.16)}
+    .out{margin-top:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px}
+    pre{margin:0;background:transparent;padding:6px 0;font-size:15px}
+    .small{font-size:12px;color:var(--muted)}
+    .flex-between{display:flex;justify-content:space-between;align-items:center}
+    .copy-btn{background:transparent;border:0;color:var(--accent);font-weight:700;cursor:pointer}
+    .inline-copy{margin-left:8px;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--accent);font-weight:700}
+    footer{margin-top:10px;font-size:12px;color:var(--muted);text-align:center}
+    .tests{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+    .chip{padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .paste-btn{padding:10px 12px;border-radius:8px;border:0;background:rgba(255,255,255,0.03);color:var(--accent);cursor:pointer}
+    @media (max-width:420px){body{padding:12px}.card{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#071927"/><path d="M7 12h10" stroke="#06b6d4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>XAU — Pips SL/TP Mobile Calculator</h1>
+        <div class="small">Paste values, tap compute, copy results. Mobile-first UI.</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div>
+        <label for="entry">Entry price</label>
+        <div class="row">
+          <input id="entry" class="input" type="text" inputmode="decimal" placeholder="e.g. 4143.30" autocomplete="off" />
+          <button id="pasteEntry" class="paste-btn" title="Paste from clipboard">Paste</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="side">Side</label>
+        <div class="row">
+          <select id="side" class="input small" aria-label="side">
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="pips">Pips to use (integer)</label>
+        <div class="row">
+          <input id="pips" class="input" type="number" placeholder="e.g. 3000" />
+          <!-- keep pipUnit present and with matching id -->
+          <input id="pipUnit" class="input small" type="text" placeholder="Pip unit (e.g. 0.01)" value="0.01" style="width:34%"/>
+        </div>
+        <div class="small">For XAUUSD common pip unit = 0.01 (so 3000 pips = 3000 * 0.01 = 30 points)</div>
+      </div>
+
+      <div class="controls">
+        <div class="flex-between">
+          <button class="btn" id="compute">Compute SL & TP</button>
+          <button class="btn secondary" id="clear">Clear</button>
+        </div>
+      </div>
+
+      <!-- Quick presets / test cases -->
+      <div class="tests small" aria-hidden="false">
+        <div class="chip" id="preset1300">Preset: 1300 pips</div>
+        <div class="chip" id="preset3000">Preset: 3000 pips</div>
+        <div class="chip" id="preset4000">Preset: 4000 pips</div>
+        <div class="chip" id="runTest1">Test case 1 (4143.30 buy 3000)</div>
+        <div class="chip" id="runTest2">Test case 2 (4158.34 sell 4000)</div>
+        <div class="chip" id="edgeZeroPips">Edge: 0 pips</div>
+        <div class="chip" id="edgeNegativePips">Edge: -100 pips</div>
+      </div>
+
+      <div class="out" id="output" aria-live="polite" style="display:none">
+        <div class="flex-between"><div class="small">Results</div><button class="copy-btn" id="copyAll">Copy All</button></div>
+        <hr style="opacity:0.06;margin:8px 0" />
+
+        <div>
+          <pre id="fmtEntry"></pre>
+
+          <div style="margin-top:8px" id="slBlock">
+            <div class="small">SL</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <pre id="fmtSL" style="margin:0"></pre>
+              <button class="inline-copy" id="copySL">Copy SL</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px" id="tpBlock">
+            <div class="small">TP</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <pre id="fmtTP" style="margin:0"></pre>
+              <button class="inline-copy" id="copyTP">Copy TP</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px" id="metaBlock" class="small"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>Host: any static host (GitHub Pages / Vercel / Netlify / Firebase Hosting) — file is single HTML, drag & drop friendly.</footer>
+  </div>
+
+  <script>
+    // Simple safe element getter
+    function getEl(id) {
+      try {
+        return document.getElementById(id);
+      } catch (e) {
+        console.error('getEl error for', id, e);
+        return null;
+      }
+    }
+
+    // Main compute function: always queries DOM on each call and is defensive
+    function compute() {
+      var entryEl = getEl('entry');
+      var sideEl = getEl('side');
+      var pipsEl = getEl('pips');
+      var pipUnitEl = getEl('pipUnit');
+
+      if (!entryEl || !sideEl || !pipsEl) {
+        alert('Required inputs missing (entry/side/pips). Please reload page.');
+        return null;
+      }
+
+      var entryRaw = (entryEl.value || '').toString().trim();
+      var entry = parseFloat(entryRaw.replace(/,/g, ''));
+      var side = (sideEl.value || 'buy').toLowerCase();
+      var pips = parseInt((pipsEl.value || '').toString(), 10);
+
+      // fallback if pipUnit element missing or empty
+      var pipUnit = 0.01;
+      if (pipUnitEl && pipUnitEl.value !== undefined && pipUnitEl.value !== '') {
+        var parsed = parseFloat(pipUnitEl.value);
+        if (isFinite(parsed)) pipUnit = parsed;
+        else console.warn('Invalid pipUnit value, using fallback 0.01');
+      } else {
+        console.warn('pipUnit element missing or empty, using fallback 0.01');
+      }
+
+      if (!isFinite(entry) || !Number.isInteger(pips)) {
+        alert('Please enter a valid Entry price and integer Pips value');
+        return null;
+      }
+
+      var pointMove = pips * pipUnit;
+      var sl, tp;
+      if (side === 'buy') {
+        sl = +(entry - pointMove);
+        tp = +(entry + pointMove);
+      } else {
+        sl = +(entry + pointMove);
+        tp = +(entry - pointMove);
+      }
+
+      var fmtEntry = '\n' + entry.toFixed(5) + '\n\nSide: ' + (side === 'buy' ? 'Buy' : 'Sell') + '\n';
+      var fmtSL = sl.toFixed(5);
+      var fmtTP = tp.toFixed(5);
+
+      var out = getEl('output'); if (out) out.style.display = 'block';
+      var setText = function(id, txt){ var n = getEl(id); if (n) n.textContent = txt };
+      setText('fmtEntry', fmtEntry);
+      setText('fmtSL', fmtSL);
+      setText('fmtTP', fmtTP);
+
+      setText('metaBlock', 'Pips: ' + pips + '  •  Point move: ' + pointMove);
+
+      // copy helpers
+      var copyText = function(txt){
+        if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
+        return Promise.reject('clipboard unavailable');
+      };
+      var copySLbtn = getEl('copySL'); if (copySLbtn) copySLbtn.onclick = function(){ copyText(fmtSL).then(function(){ flash('SL copied') }).catch(function(){ flash('Copy failed') }); };
+      var copyTPbtn = getEl('copyTP'); if (copyTPbtn) copyTPbtn.onclick = function(){ copyText(fmtTP).then(function(){ flash('TP copied') }).catch(function(){ flash('Copy failed') }); };
+      var copyAllbtn = getEl('copyAll'); if (copyAllbtn) copyAllbtn.onclick = function(){ copyText(fmtEntry + '\nSL\n' + fmtSL + '\n\nTP\n' + fmtTP).then(function(){ flash('All copied') }).catch(function(){ flash('Copy failed') }); };
+
+      var result = {entry: entry, side: side, pips: pips, pipUnit: pipUnit, sl: sl, tp: tp};
+      console.info('compute result', result);
+      return result;
+    }
+
+    function flash(msg){
+      var elFlash = document.createElement('div');
+      elFlash.textContent = msg;
+      elFlash.style.position='fixed'; elFlash.style.left='50%'; elFlash.style.bottom='14px'; elFlash.style.transform='translateX(-50%)';
+      elFlash.style.background='rgba(2,6,23,0.9)'; elFlash.style.color='white'; elFlash.style.padding='8px 12px'; elFlash.style.borderRadius='8px'; elFlash.style.zIndex=9999;
+      document.body.appendChild(elFlash);
+      setTimeout(function(){ if (elFlash && elFlash.parentNode) elFlash.parentNode.removeChild(elFlash) },1200);
+    }
+
+    // Setup once DOM is ready
+    document.addEventListener('DOMContentLoaded', function(){
+      var computeBtn = getEl('compute'); if (computeBtn) computeBtn.addEventListener('click', function(){ try{ compute() } catch(e){ console.error(e); alert('Error computing — check console') } });
+      var clearBtn = getEl('clear'); if (clearBtn) clearBtn.addEventListener('click', function(){ ['entry','pips','pipUnit'].forEach(function(id){ var n = getEl(id); if (n) n.value = '' }); var out = getEl('output'); if (out) out.style.display='none' });
+
+      var entryEl = getEl('entry'); if (entryEl) entryEl.focus();
+      ['entry','pips','pipUnit'].forEach(function(id){ var n = getEl(id); if (!n) return; n.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); compute(); } }); });
+
+      // paste button
+      var pasteBtn = getEl('pasteEntry'); if (pasteBtn) pasteBtn.addEventListener('click', function(){
+        // robust paste: try async clipboard API, fall back to prompt for file:// or unsupported contexts
+        (async function(){
+          var entryField = getEl('entry');
+          if (!entryField) return flash('Entry field missing');
+          try {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+              try {
+                var text = await navigator.clipboard.readText();
+                if (text && text.toString().trim() !== '') {
+                  entryField.value = text.toString().trim();
+                  flash('Pasted from clipboard');
+                  return;
+                }
+                // empty clipboard, fall through to manual
+              } catch (err) {
+                // reading clipboard failed (permissions or insecure context)
+                console.warn('clipboard.readText failed', err);
+              }
+            }
+
+            // fallback: prompt the user to paste manually (works in file:// and insecure contexts)
+            var manual = prompt('Paste entry price here');
+            if (manual !== null && manual !== undefined) {
+              entryField.value = manual.toString().trim();
+              flash('Pasted (manual)');
+            } else {
+              flash('Paste cancelled');
+            }
+          } catch (e) {
+            console.error('Paste handler error', e);
+            var alt = prompt('Paste entry price (fallback)');
+            if (alt) { entryField.value = alt.toString().trim(); flash('Pasted (manual)') }
+          }
+        })();
+      });
+
+      // Presets and tests - add listeners only if elements found
+      var preset = function(pips){ var p = getEl('pips'); if (p) p.value = pips; };
+      var set = function(data){ if (!data) return; if (data.entry !== undefined){ var n=getEl('entry'); if(n) n.value = data.entry } if (data.side !== undefined){ var n=getEl('side'); if(n) n.value = data.side } if (data.pips !== undefined){ var n=getEl('pips'); if(n) n.value = data.pips } if (data.pipUnit !== undefined){ var n=getEl('pipUnit'); if(n) n.value = data.pipUnit } };
+
+      var el = function(id){ return getEl(id); };
+      if (el('preset1300')) el('preset1300').addEventListener('click', function(){ preset(1300); });
+      if (el('preset3000')) el('preset3000').addEventListener('click', function(){ preset(3000); });
+      if (el('preset4000')) el('preset4000').addEventListener('click', function(){ preset(4000); });
+
+      if (el('runTest1')) el('runTest1').addEventListener('click', function(){ set({entry:'4143.30', side:'buy', pips:3000, pipUnit:'0.01'}); var r = compute(); console.log('Test1 result', r); flash('Test1 run — check console or results'); });
+      if (el('runTest2')) el('runTest2').addEventListener('click', function(){ set({entry:'4158.34', side:'sell', pips:4000, pipUnit:'0.01'}); var r = compute(); console.log('Test2 result', r); flash('Test2 run — check console or results'); });
+
+      if (el('edgeZeroPips')) el('edgeZeroPips').addEventListener('click', function(){ set({entry:'4143.30', side:'buy', pips:0, pipUnit:'0.01'}); var r = compute(); console.log('Edge zero pips', r); flash('Edge zero pips run'); });
+      if (el('edgeNegativePips')) el('edgeNegativePips').addEventListener('click', function(){ set({entry:'4143.30', side:'buy', pips:-100, pipUnit:'0.01'}); var r = compute(); console.log('Edge negative pips', r); flash('Edge negative pips run'); });
+
+      // expose compute for console / automated tests
+      window.__xau_compute = compute;
+    });
+
+    // Safe global exposure in case scripts call compute very early — this wrapper will try to run
+    if (!window.__xau_compute) window.__xau_compute = function(){ try{ return compute() } catch(e){ console.error('Early compute call failed', e); return null } };
+  </script>
+</body>
+</html>
