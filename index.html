@@ -64,7 +64,7 @@
       <div style="margin-top:10px">
         <label for="pips">Pips to use (integer)</label>
         <div class="row">
-          <input id="pips" class="input" type="tel" inputmode="numeric" pattern="\d*" placeholder="e.g. 3000" />
+          <input id="pips" class="input" type="number" placeholder="e.g. 3000" />
           <!-- keep pipUnit present and with matching id -->
           <input id="pipUnit" class="input small" type="text" placeholder="Pip unit (e.g. 0.01)" value="0.01" style="width:34%"/>
         </div>
@@ -174,9 +174,9 @@
         tp = +(entry - pointMove);
       }
 
-      var fmtEntry = '\n' + entry.toFixed(5) + '\n\nSide: ' + (side === 'buy' ? 'Buy' : 'Sell') + '\n';
-      var fmtSL = sl.toFixed(5);
-      var fmtTP = tp.toFixed(5);
+      var fmtEntry = '\n' + entry.toFixed(2) + '\n\nSide: ' + (side === 'buy' ? 'Buy' : 'Sell') + '\n';
+      var fmtSL = sl.toFixed(2);
+      var fmtTP = tp.toFixed(2);
 
       var out = getEl('output'); if (out) out.style.display = 'block';
       var setText = function(id, txt){ var n = getEl(id); if (n) n.textContent = txt };
